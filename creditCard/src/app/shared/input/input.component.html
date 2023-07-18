@@ -1,0 +1,17 @@
+<div class="field">
+    <label class="label">{{label}}</label>
+    <div class="control">
+        <input class="input" [type]="type" [formControl]="controller"
+            [ngClass]="{'is-danger':showError()}"/>
+    </div>
+
+    <ng-container *ngIf="showError">
+        <br/>
+        <span class="help is-danger" style="color:red;" 
+            *ngIf="controller?.errors?.['required']">Input is required!!</span>
+        <span class="help is-danger" style="color:red;"
+            *ngIf="controller?.errors?.['minlength']">3 Character is the Minimum input length!!</span>
+        <span class="help is-danger" style="color:red;"
+            *ngIf="controller?.errors?.['pattern']">cardNumner Length must be 16 number!!</span>
+    </ng-container>
+</div>
