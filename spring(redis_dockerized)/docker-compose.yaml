@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  api:
+    build: ./spring
+    ports:
+      - 7000:7000
+    depends_on:
+      - redis
+  redis:
+    image: redis
+    hostname: redis
+    ports:
+      - 6379:6379
+    
