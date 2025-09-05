@@ -1,0 +1,101 @@
+version: "3.8"
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:8.0
+    restart: on-failure
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: micro
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - /home/star/tmp/init_micro.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - mysql_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p193755@Ali"]
+      interval: 90s
+      retries: 5
+
+  eureka:
+    image: alikmli/eurekaserver:1.0
+    container_name: eureka
+    ports:
+      - "8761:8761"
+    networks:
+      - spring_net
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  gateway:
+    image: alikmli/gateway:1.0
+    container_name: gateway
+    command: sh -c "apt update && apt install -y iputils-ping && bash"
+    ports:
+      - "7070:7070"
+    networks:
+      - spring_net
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      eureka:
+        condition: service_started
+
+  product:
+    image: alikmli/product:1.0
+    container_name: product
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - spring_net
+      - mysql_net
+    depends_on:
+      eureka:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+
+  discount:
+    image: alikmli/discount:1.0
+    container_name: discount
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - spring_net
+      - mysql_net
+    depends_on:
+      eureka:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+
+  notification:
+    image: alikmli/notification:1.0
+    container_name: notification
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - spring_net
+      - mysql_net
+    depends_on:
+      eureka:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+
+networks:
+  spring_net:
+    driver: bridge
+  mysql_net:
+    driver: bridge
